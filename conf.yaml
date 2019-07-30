@@ -1,0 +1,10 @@
+personalize:
+  ping_default: yes
+  Port-Forward_default: yes
+  forward_port: 9055
+  server-port_default: 443
+  ping_count: 5
+  ping_delay: 0.1
+auth:
+  username:
+  pass:
