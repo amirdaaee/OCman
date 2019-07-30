@@ -1,10 +1,15 @@
 personalize:
+  # ping default state
   ping_default: yes
+  # port-forwarding default state
   Port-Forward_default: yes
+  # port to forward
   forward_port: 9055
   server-port_default: 443
   ping_count: 5
   ping_delay: 0.1
 auth:
+  # authentication username
   username:
+  # authentication password
   pass:
