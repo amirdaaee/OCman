@@ -1,6 +1,6 @@
-# EZcisco
+# OCman
 Easy and useful CLI tool for open-connect connection management<br>
-EZcisco is a python script that helps you to: 
+OCman is a python script that helps you to: 
 <ul>
 <li>store server list and access automatically
 <li>ping servers before connection</li>
