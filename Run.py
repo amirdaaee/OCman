@@ -5,8 +5,24 @@ import os
 import yaml
 from multiprocessing.pool import ThreadPool
 
+
+def get_or_default(prop, message):
+    val = cfg[prop]
+    def_str = 'y/N'
+    if val:
+        def_str = 'Y/n'
+    val_ = input(f'{message} {def_str}:')
+    val_ = val_.lower()
+    if val_ == 'n':
+        val = False
+    elif val_ == 'y':
+        val = True
+    return val
+
+
 # ---------------- Directory preparing
-base_dir_path = os.path.dirname(os.path.realpath(__file__))
+# base_dir_path = os.path.dirname(os.path.realpath(__file__))
+base_dir_path = os.getcwd()
 conf_file_path = os.path.join(base_dir_path, 'conf.yaml')
 auth_file_path = os.path.join(base_dir_path, 'auth.yaml')
 server_file_path = os.path.join(base_dir_path, 'server.address')
@@ -32,25 +48,13 @@ adds = [x.replace(' ', '').split(':') for x in adds if x.replace(' ', '') != '']
 for c, i in enumerate(adds):
     if len(i) == 1:
         adds[c].append(cfg['server-port_default'])
-assert len(adds) > 0, 'No server is defined in {}'.format(server_file_path)
+assert len(adds) > 0, f'No server is defined in {server_file_path}'
 # ---------------- Ping servers
-ping = cfg['ping_default']
-def_str = 'y/N'
+ping = get_or_default('ping_default', 'ping servers?')
 if ping:
-    def_str = 'Y/n'
-ping_ = input('ping servers? {}:'.format(def_str))
-ping_ = ping_.lower()
-if ping_ == 'n':
-    ping = False
-elif ping_ == 'y':
-    ping = True
-# .............
-if ping:
+
     def ping_time(addr):
-        command_ = "nping --tcp-connect --delay {} -c {} -p {} {}".format(cfg['ping_delay'],
-                                                                          cfg['ping_count'],
-                                                                          addr[1],
-                                                                          addr[0])
+        command_ = f"nping --tcp-connect --delay {cfg['ping_delay']} -c {cfg['ping_count']} -p {addr[1]} {addr[0]}"
         p_ = subprocess.run(command_, shell=True, stdout=subprocess.PIPE).stdout
         p_ = re.findall(r"(Avg rtt: )(.+)(TCP)", str(p_))
         try:
@@ -84,7 +88,7 @@ print('Connecting to', adds)
 # ---------------- authentication Data
 if auth['username'] is None:
     print('no username is set')
-    print('you can save username in {} at username:'.format(auth_file_path))
+    print(f'you can save username in {auth_file_path} at username:')
     username = input('username:')
 else:
     username = auth['username']
@@ -92,31 +96,25 @@ else:
 
 if auth['password'] is None:
     print('no password is set')
-    print('you can save password in {} at password:'.format(auth_file_path))
+    print(f'you can save password in {auth_file_path} at password:')
     passw = input('password:')
 else:
     passw = auth['password']
 # ---------------- Set running mode
-forw = cfg['Port-Forward_default']
-def_str = 'y/N'
-if forw:
-    def_str = 'Y/n'
-forw_ = input('port forwarding? {}:'.format(def_str))
-forw_ = forw_.lower()
-if forw_ == 'n':
-    forw = False
-elif forw_ == 'y':
-    forw = True
-# ---------------- Run
+forw = get_or_default('Port-Forward_default', 'port forwarding?')
+pre_str = 'printf "%s\\n" yes '
+post_str = f' -u {username}  {adds} '
+oa = cfg['openconnect-args']
 if forw:
     port = cfg['forward_port']
+    ka = cfg['keepalive_interval']
     print("Port-Forward :", port)
     print('-' * 50)
-    command = 'printf "%s\\n" yes {} | openconnect --script-tun   --script   "ocproxy   -D   9055" -u {} {}'.format(
-        passw, username, adds)
+    tune = f' --script-tun --script "ocproxy -D {port} -k {ka}" '
+    command = f'{pre_str}{passw} | openconnect {tune} {oa} {post_str}'
 else:
-    print('system wide proxy')
+    print('system-wide proxy')
     subprocess.run('sudo echo "sudo access granted"', shell=True)
     print('-' * 50)
-    command = 'printf "%s\\n" yes {} | sudo openconnect -u {} {}'.format(passw, username, adds)
+    command = f'{pre_str}{passw} | sudo openconnect {oa} {post_str}'
 subprocess.run(command, shell=True)

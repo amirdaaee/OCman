@@ -1,8 +1,10 @@
 ping_default: yes
 Port-Forward_default: yes
 forward_port: 9055
+keepalive_interval: 10
 server-port_default: 443
 ping_count: 3
 ping_delay: 0.1
 max_ping_threads: 15
 server_ping_spaces: 30
+openconnect-args : ''
