@@ -21,8 +21,7 @@ def get_or_default(prop, message):
 
 
 # ---------------- Directory preparing
-# base_dir_path = os.path.dirname(os.path.realpath(__file__))
-base_dir_path = os.getcwd()
+base_dir_path=os.path.dirname(os.path.abspath(__file__))
 conf_file_path = os.path.join(base_dir_path, 'conf.yaml')
 auth_file_path = os.path.join(base_dir_path, 'auth.yaml')
 server_file_path = os.path.join(base_dir_path, 'server.address')
