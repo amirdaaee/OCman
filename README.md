@@ -5,7 +5,7 @@ OCman is a python script that helps you to:
 <li>store server list and access automatically
 <li>ping servers before connection</li>
 <li>store authentication data</li>
-<li>connection port-forwarding or use as transperent proxy</li>
+<li>connection port-forwarding or system-wide proxy</li>
 </ul>
 
 ## config
