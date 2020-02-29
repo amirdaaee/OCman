@@ -9,7 +9,7 @@ OCman is a python script that helps you to:
 </ul>
 
 ## config
-you can save authentication data and customize some features in the 'conf.yaml' file <br>
+you can save authentication data and customize some features in 'auth.yaml' and 'conf.yaml' files <br>
 you should store servers data in the 'server.address' file in the form of address:port and separate them with new line
 
 ## usage
