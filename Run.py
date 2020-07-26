@@ -1,9 +1,10 @@
 #!/usr/bin/python3
-import subprocess
-import re
 import os
-import yaml
+import re
+import subprocess
 from multiprocessing.pool import ThreadPool
+
+import yaml
 
 
 def get_or_default(prop, message):
@@ -26,13 +27,30 @@ conf_file_path = os.path.join(base_dir_path, 'conf.yaml')
 auth_file_path = os.path.join(base_dir_path, 'auth.yaml')
 server_file_path = os.path.join(base_dir_path, 'server.address')
 # ---------------- Load configs
+if not os.path.isfile(conf_file_path):
+    print('Creating config template at ', conf_file_path)
+    config_template = {
+        'ping_default': True,
+        'Port-Forward_default': True,
+        'forward_port': 9055,
+        'keepalive_interval': 10,
+        'server-port_default': 443,
+        'ping_count': 3,
+        'ping_delay': 0.1,
+        'max_ping_threads': 15,
+        'server_ping_spaces': 30,
+        'openconnect-args': ''
+    }
+    with open(conf_file_path, 'w') as f:
+        yaml.safe_dump(config_template, f)
 with open(conf_file_path, 'r') as ymlcfg:
     cfg = yaml.safe_load(ymlcfg)
 # ---------------- Load authentication data
 if not os.path.isfile(auth_file_path):
     print('Creating auth template at ', auth_file_path)
+    auth_template = {'username': None, 'password': None}
     with open(auth_file_path, 'w') as f:
-        yaml.safe_dump({'username': None, 'password': None}, f)
+        yaml.safe_dump(auth_template, f)
 with open(auth_file_path, 'r') as ymlauth:
     auth = yaml.safe_load(ymlauth)
 # ---------------- Load Servers
@@ -43,15 +61,15 @@ if not os.path.isfile(server_file_path):
 with open(server_file_path, 'r') as adds:
     adds = adds.read()
 adds = adds.split('\n')
-adds = [x.replace(' ', '').split(':') for x in adds if x.replace(' ', '') != '']
+adds = [x.strip().split(':') for x in adds if x.replace(' ', '') != '']
 for c, i in enumerate(adds):
     if len(i) == 1:
         adds[c].append(cfg['server-port_default'])
-assert len(adds) > 0, f'No server is defined in {server_file_path}'
+server_template = '\nserver1_ip:server1_port\nserver2_ip:server2_port'
+assert len(adds) > 0, f'No server is defined in {server_file_path}. example:{server_template}'
 # ---------------- Ping servers
 ping = get_or_default('ping_default', 'ping servers?')
 if ping:
-
     def ping_time(addr):
         command_ = f"nping --tcp-connect --delay {cfg['ping_delay']} -c {cfg['ping_count']} -p {addr[1]} {addr[0]}"
         p_ = subprocess.run(command_, shell=True, stdout=subprocess.PIPE).stdout
@@ -60,8 +78,6 @@ if ping:
             return p_[0][1][:-2]
         except Exception as E_:
             return str(E_)
-
-
     with ThreadPool(max(len(adds), int(cfg['max_ping_threads']))) as tpool:
         latency = tpool.map(ping_time, adds)
 # ---------------- Print Server list
